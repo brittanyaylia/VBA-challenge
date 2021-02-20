@@ -1,0 +1,106 @@
+Sub StockAnalysis()
+
+Dim WS As Worksheet
+    For Each WS In ActiveWorkbook.Worksheets
+    WS.Activate
+        
+        'set variables
+        Dim Start_Price As Double
+        Dim End_Price As Double
+        Dim Price_Change As Double
+        Dim Ticker As String
+        Dim Percent_Change As Double
+        Dim Stock_Volume As Double
+        Stock_Volume = 0
+        
+        'set row/column reference
+        Dim Row As Double
+        Row = 2
+        Dim Column As Integer
+        Column = 1
+        
+        Dim i As Long
+
+        'summary table headers
+        Cells(1, 9).Value = "Ticker"
+        Cells(1, 10).Value = "Yearly Price Change"
+        Cells(1, 11).Value = "Percent Change"
+        Cells(1, 12).Value = "Total Stock Volume"
+        
+        'set the Last Row of ticker data
+        LastRow = WS.Cells(Rows.Count, 1).End(xlUp).Row
+        
+        'set initial start price of ticker data
+        Start_Price = Cells(2, Column + 2).Value
+                
+        'loop through tickers
+        For i = 2 To LastRow
+        
+         ' Check if the same ticker symbol, if not...
+            If Cells(i + 1, Column).Value <> Cells(i, Column).Value Then
+            
+                ' ticker name
+                Ticker_Name = Cells(i, Column).Value
+                'add to summary table
+                Cells(Row, Column + 8).Value = Ticker_Name
+        
+                ' set end price
+                End_Price = Cells(i, Column + 5).Value
+                
+                ' calculate yearly price change
+                Price_Change = End_Price - Start_Price
+                'add to summary table
+                Cells(Row, Column + 9).Value = Price_Change
+                
+                ' differentiate and calculate percent change
+                If (Start_Price = 0 And End_Price = 0) Then
+                    Percent_Change = 0
+                ElseIf (Start_Price = 0 And End_Price <> 0) Then
+                    Percent_Change = 1
+                Else
+                    Percent_Change = Price_Change / Start_Price
+                    'add to summary table
+                    Cells(Row, Column + 10).Value = Percent_Change
+                    'format to percentages
+                    Cells(Row, Column + 10).NumberFormat = "0.00%"
+                End If
+                
+                ' calculate total stock volume
+                Stock_Volume = Stock_Volume + Cells(i, Column + 6).Value
+                'add to summary table
+                Cells(Row, Column + 11).Value = Stock_Volume
+                
+                ' Add one to the summary table row
+                Row = Row + 1
+                
+                ' reset start price
+                Start_Price = Cells(i + 1, Column + 2)
+                
+                ' reset stock volume
+                Stock_Volume = 0
+                
+            'if the following cells are the same ticker..
+            Else
+                Stock_Volume = Stock_Volume + Cells(i, Column + 6).Value
+            End If
+        Next i
+        
+        'set last row of price change per ws
+        LastRowPrice = WS.Cells(Rows.Count, Column + 8).End(xlUp).Row
+        
+        ' Set the Cell Colors
+        For j = 2 To LastRowPrice
+            If (Cells(j, Column + 9).Value > 0 Or Cells(j, Column + 9).Value = 0) Then
+                Cells(j, Column + 9).Interior.ColorIndex = 10
+            ElseIf Cells(j, Column + 9).Value < 0 Then
+                Cells(j, Column + 9).Interior.ColorIndex = 3
+            End If
+        Next j
+        
+        'autofit data to columns
+        ActiveSheet.UsedRange.EntireColumn.AutoFit
+        
+    Next WS
+        
+End Sub
+
